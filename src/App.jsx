@@ -5,6 +5,7 @@ import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import NovoGasto from "./pages/NovoGasto.jsx";
+import ThemeToggle from "./components/ThemeToggle.jsx";
 
 // 💫 Transições entre páginas
 function AnimatedRoutes() {
@@ -19,6 +20,7 @@ function AnimatedRoutes() {
 
     return (
         <AnimatePresence mode="wait">
+            <ThemeToggle/>
             <Routes location={location} key={location.pathname}>
                 {/* Login */}
                 <Route

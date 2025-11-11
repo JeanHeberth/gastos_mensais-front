@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import {API_URL} from "../config/apiConfig.js";
 
 export default function NovoGasto() {
     const navigate = useNavigate();
@@ -40,7 +41,7 @@ export default function NovoGasto() {
         try {
             const token = localStorage.getItem("token");
 
-            const response = await fetch("http://localhost:8080/gastos", {
+            const response = await fetch(API_URL + "gastos", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

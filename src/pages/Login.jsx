@@ -1,53 +1,56 @@
+import api from "../services/api";
 import { useNavigate } from "react-router-dom";
-import ThemeToggle from "../components/ThemeToggle";
+import { useState } from "react";
 
 export default function Login() {
+    const [email, setEmail] = useState("");
+    const [senha, setSenha] = useState("");
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-        navigate("/register");
+        try {
+            const response = await api.post("/auth/login", { email, senha });
+            localStorage.setItem("token", response.data.token);
+            navigate("/dashboard");
+        } catch (error) {
+            alert("❌ Login inválido");
+        }
     };
 
     return (
-        <div className="min-h-screen flex flex-col justify-center items-center bg-background dark:bg-darkBackground transition-colors duration-500">
-            <ThemeToggle />
+        <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
+            <form
+                onSubmit={handleLogin}
+                className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg w-80"
+            >
+                <h2 className="text-2xl font-bold text-center mb-6 text-gray-800 dark:text-gray-100">
+                    Login
+                </h2>
 
-            <div className="w-96 bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg transition-all duration-500">
-                <h1 className="text-3xl font-semibold text-center text-primary dark:text-white mb-6">
-                    Login 💼
-                </h1>
+                <input
+                    type="email"
+                    placeholder="E-mail"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full p-3 mb-4 rounded-md border border-gray-300 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-100"
+                />
 
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                    <input
-                        type="email"
-                        placeholder="E-mail"
-                        className="p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-                    />
-                    <input
-                        type="password"
-                        placeholder="Senha"
-                        className="p-3 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-                    />
+                <input
+                    type="password"
+                    placeholder="Senha"
+                    value={senha}
+                    onChange={(e) => setSenha(e.target.value)}
+                    className="w-full p-3 mb-6 rounded-md border border-gray-300 dark:border-gray-700 dark:bg-gray-700 dark:text-gray-100"
+                />
 
-                    <button
-                        type="submit"
-                        className="bg-primary text-white py-3 rounded-lg hover:bg-blue-700 transition-colors duration-300"
-                    >
-                        Entrar
-                    </button>
-                </form>
-
-                <p className="text-center text-gray-600 dark:text-gray-400 mt-4">
-                    Não tem conta?{" "}
-                    <button
-                        onClick={() => navigate("/register")}
-                        className="text-primary hover:underline"
-                    >
-                        Cadastre-se
-                    </button>
-                </p>
-            </div>
+                <button
+                    type="submit"
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-md font-semibold transition"
+                >
+                    Entrar
+                </button>
+            </form>
         </div>
     );
 }
