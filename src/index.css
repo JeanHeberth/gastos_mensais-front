@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tema escuro/claro animado */
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    @apply bg-background text-gray-800 transition-colors duration-300 ease-in-out;
+}
+
+.dark body {
+    @apply bg-darkBackground text-gray-100;
+}
