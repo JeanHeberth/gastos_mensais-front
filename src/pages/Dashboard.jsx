@@ -7,13 +7,13 @@ import {useState} from "react";
 export default function Dashboard() {
     const navigate = useNavigate();
 
-    const [resumo, setResumo] = useState({
+    const [resumo,] = useState({
         total: 2000,
         categorias: 3,
         quantidade: 8,
     });
 
-    const [gastos, setGastos] = useState([
+    const [gastos,] = useState([
         {descricao: "Curso Java", valor: 1200},
         {descricao: "Supermercado", valor: 800},
     ]);
@@ -36,7 +36,7 @@ export default function Dashboard() {
                 <ListaGastos gastos={gastos}/>
 
                 <button
-                    onClick={() => console.log("Novo gasto")} // você pode trocar pela navegação desejada
+                    onClick={() => navigate("/gastos/novo")} // você pode trocar pela navegação desejada
                     className="fixed bottom-8 right-8 bg-blue-600 text-white rounded-full p-4
              shadow-lg hover:scale-110 hover:rotate-12 hover:brightness-125
              transition-all duration-300 ease-in-out"
