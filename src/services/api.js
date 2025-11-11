@@ -4,7 +4,7 @@ import { API_URL } from "../config/apiConfig.js";
 
 // 🧠 Cria a instância do Axios
 const api = axios.create({
-    baseURL: API_URL,
+    baseURL: API_URL ,
     headers: {
         "Content-Type": "application/json",
     },

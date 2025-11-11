@@ -1,12 +1,11 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {API_URL} from "../config/apiConfig.js";
+import {useState} from "react";
+import api from "../services/api";
+import {useNavigate} from "react-router-dom";
 
 export default function NovoGasto() {
     const navigate = useNavigate();
 
-    const [formData, setFormData] = useState({
+    const [gasto, setGasto] = useState({
         descricao: "",
         valorTotal: "",
         categoria: "",
@@ -15,197 +14,175 @@ export default function NovoGasto() {
         dataCompra: "",
     });
 
-    const [loading, setLoading] = useState(false);
-
     const categorias = [
         "Alimentação",
         "Transporte",
+        "Moradia",
+        "Saúde",
         "Educação",
         "Lazer",
-        "Saúde",
-        "Tecnologia",
+        "Eletrônico",
         "Outros",
     ];
 
-    const tiposPagamento = ["Cartão", "Débito", "Dinheiro", "Pix"];
+    const tiposPagamento = [
+        "Dinheiro",
+        "Cartão de Crédito",
+        "Cartão de Débito",
+        "Pix",
+        "Transferência",
+        "Boleto",
+    ];
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        const {name, value} = e.target;
+
+        if (name === "valorTotal") {
+            // Remove tudo que não for número
+            const numericValue = value.replace(/\D/g, "");
+
+            // Converte para float com duas casas decimais
+            const floatValue = (parseInt(numericValue, 10) / 100).toFixed(2);
+
+            // Formata em Real Brasileiro
+            const formattedValue = isNaN(floatValue)
+                ? ""
+                : parseFloat(floatValue).toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                });
+
+            setGasto({...gasto, [name]: formattedValue});
+        } else {
+            setGasto({...gasto, [name]: value});
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
 
         try {
-            const token = localStorage.getItem("token");
+            const valorNumerico = parseFloat(
+                gasto.valorTotal.replace(/[R$\s.]/g, "").replace(",", ".")
+            );
 
-            const response = await fetch(API_URL + "gastos", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(formData),
-            });
+            const gastoFormatado = {
+                ...gasto,
+                valorTotal: valorNumerico,
+                dataCompra: gasto.dataCompra ? `${gasto.dataCompra}T00:00:00` : null,
+            };
 
-            if (!response.ok) throw new Error("Erro ao criar gasto");
-
+            await api.post("/gastos", gastoFormatado);
+            alert("✅ Gasto cadastrado com sucesso!");
             navigate("/dashboard");
         } catch (error) {
-            alert("❌ Erro ao salvar gasto. Tente novamente.");
-            console.error(error);
-        } finally {
-            setLoading(false);
+            console.error("Erro ao salvar gasto:", error);
+            alert("❌ Erro ao salvar gasto. Verifique os dados.");
         }
     };
 
     return (
-        <motion.div
-            className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-10 transition-colors"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-        >
-            <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 text-center">
-                    🧾 Novo Gasto
-                </h2>
+        <div
+            className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center p-4 transition-colors duration-500">
+            {/* Botão Voltar */}
+            <button
+                onClick={() => navigate("/dashboard")}
+                className="absolute top-6 left-6 px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-md text-gray-800 dark:text-gray-100 font-medium shadow-md transition-all"
+            >
+                ← Voltar ao Dashboard
+            </button>
 
-                <form onSubmit={handleSubmit} className="space-y-5">
+            <div
+                className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg w-full max-w-md transition-colors duration-500">
+                <h1 className="text-2xl font-bold text-center mb-6 text-gray-800 dark:text-gray-100">
+                    Novo Gasto 💰
+                </h1>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Descrição */}
-                    <div>
-                        <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">
-                            Descrição
-                        </label>
-                        <input
-                            type="text"
-                            name="descricao"
-                            value={formData.descricao}
-                            onChange={handleChange}
-                            className="w-full p-2.5 border rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-                            placeholder="Ex: Supermercado"
-                            required
-                        />
-                    </div>
+                    <input
+                        type="text"
+                        name="descricao"
+                        placeholder="Descrição"
+                        value={gasto.descricao}
+                        onChange={handleChange}
+                        required
+                        className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
 
-                    {/* Valor */}
-                    <div>
-                        <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">
-                            Valor Total
-                        </label>
-                        <input
-                            type="number"
-                            step="0.01"
-                            name="valorTotal"
-                            value={formData.valorTotal}
-                            onChange={handleChange}
-                            className="w-full p-2.5 border rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-                            placeholder="Ex: 250.00"
-                            required
-                        />
-                    </div>
+                    {/* Valor formatado */}
+                    <input
+                        type="text"
+                        name="valorTotal"
+                        placeholder="Valor Total (R$)"
+                        value={gasto.valorTotal}
+                        onChange={handleChange}
+                        required
+                        className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
 
                     {/* Categoria */}
-                    <div>
-                        <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">
-                            Categoria
-                        </label>
-                        <select
-                            name="categoria"
-                            value={formData.categoria}
-                            onChange={handleChange}
-                            className="w-full p-2.5 border rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-                            required
-                        >
-                            <option value="">Selecione</option>
-                            {categorias.map((c) => (
-                                <option key={c} value={c}>
-                                    {c}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                    <select
+                        name="categoria"
+                        value={gasto.categoria}
+                        onChange={handleChange}
+                        required
+                        className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
+                    >
+                        <option value="">Selecione a categoria</option>
+                        {categorias.map((cat, index) => (
+                            <option key={index} value={cat}>
+                                {cat}
+                            </option>
+                        ))}
+                    </select>
 
-                    {/* Tipo de Pagamento */}
-                    <div>
-                        <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">
-                            Tipo de Pagamento
-                        </label>
-                        <select
-                            name="tipoPagamento"
-                            value={formData.tipoPagamento}
-                            onChange={handleChange}
-                            className="w-full p-2.5 border rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-                            required
-                        >
-                            <option value="">Selecione</option>
-                            {tiposPagamento.map((tp) => (
-                                <option key={tp} value={tp}>
-                                    {tp}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                    {/* Tipo de pagamento */}
+                    <select
+                        name="tipoPagamento"
+                        value={gasto.tipoPagamento}
+                        onChange={handleChange}
+                        required
+                        className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
+                    >
+                        <option value="">Selecione o tipo de pagamento</option>
+                        {tiposPagamento.map((tipo, index) => (
+                            <option key={index} value={tipo}>
+                                {tipo}
+                            </option>
+                        ))}
+                    </select>
 
                     {/* Parcelas */}
-                    <div>
-                        <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">
-                            Parcelas
-                        </label>
-                        <input
-                            type="number"
-                            name="parcelas"
-                            value={formData.parcelas}
-                            onChange={handleChange}
-                            min="1"
-                            className="w-full p-2.5 border rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-                            required
-                        />
-                    </div>
+                    <input
+                        type="number"
+                        name="parcelas"
+                        min="1"
+                        value={gasto.parcelas}
+                        onChange={handleChange}
+                        required
+                        className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
 
-                    {/* Data da Compra */}
-                    <div>
-                        <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">
-                            Data da Compra
-                        </label>
-                        <input
-                            type="date"
-                            name="dataCompra"
-                            value={formData.dataCompra}
-                            onChange={handleChange}
-                            className="w-full p-2.5 border rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-                            required
-                        />
-                    </div>
+                    {/* Data da compra */}
+                    <input
+                        type="date"
+                        name="dataCompra"
+                        value={gasto.dataCompra}
+                        onChange={handleChange}
+                        required
+                        className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
 
-                    {/* Botão de salvar */}
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                    {/* Botão salvar */}
+                    <button
                         type="submit"
-                        disabled={loading}
-                        className={`w-full py-2.5 mt-4 rounded-lg text-white font-semibold transition-all ${
-                            loading
-                                ? "bg-gray-400 cursor-not-allowed"
-                                : "bg-indigo-600 hover:bg-indigo-700"
-                        }`}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-md shadow-md transition-colors"
                     >
-                        {loading ? "Salvando..." : "💾 Salvar Gasto"}
-                    </motion.button>
-
-                    {/* Voltar */}
-                    <motion.button
-                        type="button"
-                        onClick={() => navigate("/dashboard")}
-                        whileHover={{ scale: 1.05 }}
-                        className="w-full mt-2 py-2.5 rounded-lg border border-gray-400 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
-                    >
-                        ← Voltar ao Dashboard
-                    </motion.button>
+                        Salvar
+                    </button>
                 </form>
             </div>
-        </motion.div>
+        </div>
     );
 }

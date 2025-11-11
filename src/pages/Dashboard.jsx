@@ -1,4 +1,5 @@
 import {useEffect, useState} from "react";
+import {useNavigate} from "react-router-dom";
 import api from "../services/api";
 import {
     PieChart,
@@ -19,6 +20,7 @@ const COLORS = ["#2563eb", "#16a34a", "#ea580c", "#9333ea", "#dc2626"];
 
 export default function Dashboard() {
     const [resumo, setResumo] = useState(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchResumo = async () => {
@@ -46,7 +48,7 @@ export default function Dashboard() {
 
     return (
         <div
-            className="p-6 min-h-screen transition-colors duration-500 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+            className="relative p-6 min-h-screen transition-colors duration-500 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
             <h1 className="text-3xl font-bold mb-6 text-center">Dashboard 💸</h1>
 
             {/* Cards */}
@@ -130,6 +132,15 @@ export default function Dashboard() {
                     </BarChart>
                 </ResponsiveContainer>
             </div>
+
+            {/* Botão Flutuante de Novo Gasto */}
+            <button
+                onClick={() => navigate("/gastos/novo")}
+                className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-3xl transform hover:scale-110 hover:rotate-12 transition-all duration-300 z-50"
+                title="Adicionar novo gasto"
+            >
+                +
+            </button>
         </div>
     );
 }
