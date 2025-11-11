@@ -1,6 +1,7 @@
-import {useState} from "react";
+import { useState, useEffect } from "react";
 import api from "../services/api";
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function NovoGasto() {
     const navigate = useNavigate();
@@ -13,6 +14,22 @@ export default function NovoGasto() {
         parcelas: 1,
         dataCompra: "",
     });
+
+    const [isDark, setIsDark] = useState(
+        document.documentElement.classList.contains("dark")
+    );
+
+    // Atualiza automaticamente o estado do tema
+    useEffect(() => {
+        const observer = new MutationObserver(() => {
+            setIsDark(document.documentElement.classList.contains("dark"));
+        });
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["class"],
+        });
+        return () => observer.disconnect();
+    }, []);
 
     const categorias = [
         "Alimentação",
@@ -35,26 +52,20 @@ export default function NovoGasto() {
     ];
 
     const handleChange = (e) => {
-        const {name, value} = e.target;
+        const { name, value } = e.target;
 
         if (name === "valorTotal") {
-            // Remove tudo que não for número
             const numericValue = value.replace(/\D/g, "");
-
-            // Converte para float com duas casas decimais
             const floatValue = (parseInt(numericValue, 10) / 100).toFixed(2);
-
-            // Formata em Real Brasileiro
             const formattedValue = isNaN(floatValue)
                 ? ""
                 : parseFloat(floatValue).toLocaleString("pt-BR", {
                     style: "currency",
                     currency: "BRL",
                 });
-
-            setGasto({...gasto, [name]: formattedValue});
+            setGasto({ ...gasto, [name]: formattedValue });
         } else {
-            setGasto({...gasto, [name]: value});
+            setGasto({ ...gasto, [name]: value });
         }
     };
 
@@ -73,17 +84,42 @@ export default function NovoGasto() {
             };
 
             await api.post("/gastos", gastoFormatado);
-            alert("✅ Gasto cadastrado com sucesso!");
-            navigate("/dashboard");
+
+            toast.success("💾 Gasto cadastrado com sucesso!", {
+                style: {
+                    background: isDark ? "#065F46" : "#10B981",
+                    color: "#fff",
+                    border: isDark ? "1px solid #16A34A" : "none",
+                },
+                iconTheme: {
+                    primary: "#34D399",
+                    secondary: "#fff",
+                },
+            });
+
+            setTimeout(() => navigate("/dashboard"), 1500);
         } catch (error) {
             console.error("Erro ao salvar gasto:", error);
-            alert("❌ Erro ao salvar gasto. Verifique os dados.");
+
+            toast.error("❌ Erro ao salvar gasto. Verifique os dados.", {
+                style: {
+                    background: isDark ? "#7F1D1D" : "#EF4444",
+                    color: "#fff",
+                    border: isDark ? "1px solid #F87171" : "none",
+                },
+                iconTheme: {
+                    primary: "#F87171",
+                    secondary: "#fff",
+                },
+            });
         }
     };
 
     return (
-        <div
-            className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center p-4 transition-colors duration-500">
+        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center p-4 transition-colors duration-500">
+            {/* Toast Container */}
+            <Toaster position="top-right" reverseOrder={false} />
+
             {/* Botão Voltar */}
             <button
                 onClick={() => navigate("/dashboard")}
@@ -92,14 +128,13 @@ export default function NovoGasto() {
                 ← Voltar ao Dashboard
             </button>
 
-            <div
-                className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg w-full max-w-md transition-colors duration-500">
+            {/* Formulário */}
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg w-full max-w-md transition-colors duration-500">
                 <h1 className="text-2xl font-bold text-center mb-6 text-gray-800 dark:text-gray-100">
                     Novo Gasto 💰
                 </h1>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Descrição */}
                     <input
                         type="text"
                         name="descricao"
@@ -110,7 +145,6 @@ export default function NovoGasto() {
                         className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
                     />
 
-                    {/* Valor formatado */}
                     <input
                         type="text"
                         name="valorTotal"
@@ -121,7 +155,6 @@ export default function NovoGasto() {
                         className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
                     />
 
-                    {/* Categoria */}
                     <select
                         name="categoria"
                         value={gasto.categoria}
@@ -137,7 +170,6 @@ export default function NovoGasto() {
                         ))}
                     </select>
 
-                    {/* Tipo de pagamento */}
                     <select
                         name="tipoPagamento"
                         value={gasto.tipoPagamento}
@@ -153,7 +185,6 @@ export default function NovoGasto() {
                         ))}
                     </select>
 
-                    {/* Parcelas */}
                     <input
                         type="number"
                         name="parcelas"
@@ -164,7 +195,6 @@ export default function NovoGasto() {
                         className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
                     />
 
-                    {/* Data da compra */}
                     <input
                         type="date"
                         name="dataCompra"
@@ -174,7 +204,6 @@ export default function NovoGasto() {
                         className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white"
                     />
 
-                    {/* Botão salvar */}
                     <button
                         type="submit"
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-md shadow-md transition-colors"

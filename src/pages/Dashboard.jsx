@@ -1,5 +1,6 @@
 import {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
+import {LogOut, PlusCircle} from "lucide-react";
 import api from "../services/api";
 import {
     PieChart,
@@ -34,6 +35,11 @@ export default function Dashboard() {
         fetchResumo();
     }, []);
 
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        navigate("/login");
+    };
+
     if (!resumo)
         return (
             <p className="text-center text-gray-500 dark:text-gray-400 mt-10">
@@ -41,22 +47,39 @@ export default function Dashboard() {
             </p>
         );
 
-    const data = Object.entries(resumo.porCategoria).map(([categoria, valor]) => ({
-        name: categoria,
-        value: valor,
-    }));
+    const data = Object.entries(resumo.porCategoria).map(
+        ([categoria, valor]) => ({
+            name: categoria,
+            value: valor,
+        })
+    );
 
     return (
         <div
             className="relative p-6 min-h-screen transition-colors duration-500 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-            <h1 className="text-3xl font-bold mb-6 text-center">Dashboard 💸</h1>
+            {/* Cabeçalho */}
+            <div className="flex justify-between items-center mb-6 relative">
+                <h1 className="text-3xl font-bold text-center w-full">Dashboard 💸</h1>
+
+                {/* Botão Logout */}
+                <button
+                    onClick={handleLogout}
+                    className="absolute top-0 right-0 bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 text-white px-4 py-2 rounded-lg shadow-md flex items-center gap-2 transition-all duration-300 text-sm font-semibold"
+                    title="Sair da conta"
+                >
+                    <LogOut size={18}/>
+                    <span>Sair</span>
+                </button>
+            </div>
 
             {/* Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 <div
                     className="bg-gradient-to-r from-blue-600 to-blue-500 dark:from-blue-700 dark:to-blue-600 text-white rounded-lg p-4 text-center shadow-md transition-colors duration-500">
                     <p className="text-sm opacity-80">Total Gasto</p>
-                    <p className="text-2xl font-bold">R$ {resumo.totalGastos.toFixed(2)}</p>
+                    <p className="text-2xl font-bold">
+                        R$ {resumo.totalGastos.toLocaleString("pt-BR", {minimumFractionDigits: 2})}
+                    </p>
                 </div>
                 <div
                     className="bg-gradient-to-r from-green-600 to-emerald-500 dark:from-green-700 dark:to-emerald-600 text-white rounded-lg p-4 text-center shadow-md transition-colors duration-500">
@@ -108,7 +131,10 @@ export default function Dashboard() {
                     Comparativo de Gastos por Categoria 💰
                 </h2>
                 <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={data} margin={{top: 10, right: 30, left: 0, bottom: 0}}>
+                    <BarChart
+                        data={data}
+                        margin={{top: 10, right: 30, left: 0, bottom: 0}}
+                    >
                         <CartesianGrid strokeDasharray="3 3" stroke="#374151"/>
                         <XAxis dataKey="name" stroke="#9ca3af"/>
                         <YAxis stroke="#9ca3af"/>
@@ -136,10 +162,10 @@ export default function Dashboard() {
             {/* Botão Flutuante de Novo Gasto */}
             <button
                 onClick={() => navigate("/gastos/novo")}
-                className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-3xl transform hover:scale-110 hover:rotate-12 transition-all duration-300 z-50"
+                className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center transform hover:scale-110 hover:rotate-12 transition-all duration-300 z-50"
                 title="Adicionar novo gasto"
             >
-                +
+                <PlusCircle size={28}/>
             </button>
         </div>
     );
