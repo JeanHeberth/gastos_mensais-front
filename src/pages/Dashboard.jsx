@@ -1,6 +1,6 @@
-import {useEffect, useState} from "react";
-import {useNavigate} from "react-router-dom";
-import {LogOut, PlusCircle, Calendar} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { LogOut, PlusCircle, Calendar, Trash2 } from "lucide-react";
 import api from "../services/api";
 import {
     PieChart,
@@ -29,6 +29,8 @@ export default function Dashboard() {
     const [mes, setMes] = useState(new Date().getMonth() + 1);
     const [ano, setAno] = useState(new Date().getFullYear());
     const [mostrarParcelas, setMostrarParcelas] = useState(false);
+    const [parcelaSelecionada, setParcelaSelecionada] = useState(null);
+    const [mostrarModal, setMostrarModal] = useState(false);
     const navigate = useNavigate();
 
     const fetchResumo = async () => {
@@ -50,63 +52,44 @@ export default function Dashboard() {
         }
     };
 
-    // Editar uma parcela
-    const handleEditar = (parcela) => {
-        const novaDescricao = prompt("Digite a nova descrição:", parcela.descricao);
-        const novaCategoria = prompt("Digite a nova categoria:", parcela.categoria);
-
-        if (novaDescricao !== null && novaCategoria !== null) {
-            api
-                .put(`/parcelas/${parcela.id}`, {
-                    ...parcela,
-                    descricao: novaDescricao,
-                    categoria: novaCategoria,
-                })
-                .then(() => {
-                    alert("Parcela atualizada com sucesso!");
-                    fetchParcelas();
-                })
-                .catch((err) => {
-                    console.error("Erro ao atualizar parcela:", err);
-                    alert("Erro ao atualizar a parcela.");
-                });
-        }
-    };
-
-// Apagar uma parcela
-    const handleApagar = (parcela) => {
-        if (window.confirm(`Tem certeza que deseja apagar a parcela nº ${parcela.numero}?`)) {
-            api
-                .delete(`/parcelas/${parcela.id}`)
-                .then(() => {
-                    alert("Parcela removida com sucesso!");
-                    fetchParcelas();
-                })
-                .catch((err) => {
-                    console.error("Erro ao apagar parcela:", err);
-                    alert("Erro ao apagar a parcela.");
-                });
-        }
-    };
-
-
     useEffect(() => {
         fetchResumo();
     }, [mes, ano]);
 
     useEffect(() => {
         if (mostrarParcelas) fetchParcelas();
-    }, [mostrarParcelas, mes, ano]);
+    }, [mes, ano, mostrarParcelas, location]);
 
     const handleLogout = () => {
         localStorage.removeItem("token");
         navigate("/login");
     };
 
-    // 🔄 Ao trocar o ano, volta para janeiro
     const handleAnoChange = (novoAno) => {
         setAno(Number(novoAno));
         setMes(1);
+    };
+
+    const handleEditar = (parcela) => {
+        navigate(`/gastos/editar/${parcela.gastoId}`);
+    };
+
+    const handleConfirmarExclusao = (parcela) => {
+        setParcelaSelecionada(parcela);
+        setMostrarModal(true);
+    };
+
+    const handleExcluirParcela = async () => {
+        if (!parcelaSelecionada) return;
+        try {
+            await api.delete(`/parcelas/${parcelaSelecionada.id}`);
+            setMostrarModal(false);
+            setParcelaSelecionada(null);
+            fetchParcelas();
+        } catch (err) {
+            console.error("Erro ao apagar parcela:", err);
+            alert("Erro ao apagar a parcela.");
+        }
     };
 
     if (!resumo)
@@ -114,13 +97,12 @@ export default function Dashboard() {
 
     const totalGastos = resumo.total || resumo.totalGastos || 0;
     const data = Object.entries(resumo.porCategoria || {}).map(
-        ([categoria, valor]) => ({name: categoria, value: Number(valor)})
+        ([categoria, valor]) => ({ name: categoria, value: Number(valor) })
     );
     const totalParcelasMes = parcelas.reduce((acc, p) => acc + Number(p.valor || 0), 0);
 
     return (
-        <div
-            className="relative p-6 min-h-screen transition-colors duration-500 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+        <div className="relative p-6 min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-500">
             {/* Cabeçalho */}
             <div className="flex justify-between items-center mb-6 relative">
                 <h1 className="text-3xl font-bold text-center w-full">Dashboard 💸</h1>
@@ -128,7 +110,7 @@ export default function Dashboard() {
                     onClick={handleLogout}
                     className="absolute top-0 right-0 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-md flex items-center gap-2 transition-all duration-300 text-sm font-semibold"
                 >
-                    <LogOut size={18}/>
+                    <LogOut size={18} />
                     <span>Sair</span>
                 </button>
             </div>
@@ -163,33 +145,30 @@ export default function Dashboard() {
                             : "bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-400 dark:hover:bg-gray-600"
                     }`}
                 >
-                    <Calendar size={18}/>
+                    <Calendar size={18} />
                     {mostrarParcelas ? "Ocultar parcelas" : "Mostrar parcelas"}
                 </button>
             </div>
 
             {/* Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div
-                    className="bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg p-4 text-center shadow-md">
+                <div className="bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg p-4 text-center shadow-md">
                     <p className="text-sm opacity-80">Total Gasto</p>
                     <p className="text-2xl font-bold">
-                        R$ {totalGastos.toLocaleString("pt-BR", {minimumFractionDigits: 2})}
+                        R$ {totalGastos.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </p>
                 </div>
-                <div
-                    className="bg-gradient-to-r from-green-600 to-emerald-500 text-white rounded-lg p-4 text-center shadow-md">
+                <div className="bg-gradient-to-r from-green-600 to-emerald-500 text-white rounded-lg p-4 text-center shadow-md">
                     <p className="text-sm opacity-80">Categorias</p>
                     <p className="text-2xl font-bold">{Object.keys(resumo.porCategoria).length}</p>
                 </div>
-                <div
-                    className="bg-gradient-to-r from-orange-600 to-amber-500 text-white rounded-lg p-4 text-center shadow-md">
+                <div className="bg-gradient-to-r from-orange-600 to-amber-500 text-white rounded-lg p-4 text-center shadow-md">
                     <p className="text-sm opacity-80">Lançamentos</p>
                     <p className="text-2xl font-bold">{resumo.quantidadeGastos || resumo.quantidade}</p>
                 </div>
             </div>
 
-            {/* === Alterna entre gráficos e tabela === */}
+            {/* Alterna entre gráficos e tabela */}
             {!mostrarParcelas ? (
                 <>
                     {/* Gráfico de Pizza */}
@@ -205,47 +184,44 @@ export default function Dashboard() {
                                     outerRadius={100}
                                     fill="#8884d8"
                                     dataKey="value"
-                                    label={({name, value}) => `${name}: R$${value}`}
+                                    label={({ name, value }) => `${name}: R$${value}`}
                                 >
                                     {data.map((_, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]}/>
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Pie>
-                                <Tooltip/>
-                                <Legend/>
+                                <Tooltip />
+                                <Legend />
                             </PieChart>
                         </ResponsiveContainer>
                     </div>
 
                     {/* Gráfico de Barras */}
                     <div className="rounded-lg p-6 shadow-lg bg-white dark:bg-gray-800">
-                        <h2 className="text-lg font-semibold mb-4 text-center">
-                            Comparativo de Gastos por Categoria 💰
-                        </h2>
+                        <h2 className="text-lg font-semibold mb-4 text-center">Comparativo de Gastos 💰</h2>
                         <ResponsiveContainer width="100%" height={300}>
                             <BarChart data={data}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#374151"/>
-                                <XAxis dataKey="name" stroke="#9ca3af"/>
-                                <YAxis stroke="#9ca3af"/>
-                                <Tooltip/>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                                <XAxis dataKey="name" stroke="#9ca3af" />
+                                <YAxis stroke="#9ca3af" />
+                                <Tooltip />
                                 <Bar dataKey="value" radius={[6, 6, 0, 0]}>
                                     {data.map((_, index) => (
-                                        <Cell key={`cell-bar-${index}`} fill={COLORS[index % COLORS.length]}/>
+                                        <Cell key={`cell-bar-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
-                                    <LabelList dataKey="value" position="top" fill="#fff" fontSize={12}/>
+                                    <LabelList dataKey="value" position="top" fill="#fff" fontSize={12} />
                                 </Bar>
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
                 </>
             ) : (
-                /* ✅ Tabela atualizada */
+                /* Tabela de Parcelas */
                 <div className="rounded-xl p-6 shadow-lg mb-8 bg-white dark:bg-gray-800 overflow-x-auto">
                     <h2 className="text-lg font-semibold mb-4 text-center flex items-center justify-center gap-2">
-                        <Calendar size={20} className="text-indigo-600 dark:text-indigo-400"/>
+                        <Calendar size={20} className="text-indigo-600 dark:text-indigo-400" />
                         Parcelas do mês
                     </h2>
-
                     {parcelas.length === 0 ? (
                         <p className="text-center text-gray-500 dark:text-gray-400">
                             Nenhuma parcela encontrada para {MESES[mes - 1]} / {ano}.
@@ -281,28 +257,24 @@ export default function Dashboard() {
                                         <td className="px-4 py-2 text-center">
                                             {new Date(parcela.dataVencimento).toLocaleDateString("pt-BR")}
                                         </td>
-
                                         <td className="px-4 py-2 text-center flex justify-center gap-2">
                                             <button
                                                 onClick={() => handleEditar(parcela)}
-                                                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm font-medium transition-all"
+                                                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm font-medium"
                                             >
                                                 Editar
                                             </button>
                                             <button
-                                                onClick={() => handleApagar(parcela)}
-                                                className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm font-medium transition-all"
+                                                onClick={() => handleConfirmarExclusao(parcela)}
+                                                className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm font-medium flex items-center gap-1"
                                             >
-                                                Apagar
+                                                <Trash2 size={14} /> Apagar
                                             </button>
                                         </td>
-
-
                                     </tr>
                                 ))}
                                 </tbody>
                             </table>
-
                             <div className="mt-4 text-right text-gray-700 dark:text-gray-300 font-semibold">
                                 Total das parcelas:{" "}
                                 <span className="text-indigo-600 dark:text-indigo-400">
@@ -317,13 +289,43 @@ export default function Dashboard() {
                 </div>
             )}
 
+            {/* Modal Exclusão */}
+            {mostrarModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg w-96 text-center">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                            Confirmar exclusão
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+                            Deseja excluir a parcela{" "}
+                            <strong>nº {parcelaSelecionada?.numero}</strong> de{" "}
+                            <strong>{parcelaSelecionada?.descricao || "—"}</strong>?
+                        </p>
+                        <div className="flex justify-center gap-4">
+                            <button
+                                onClick={() => setMostrarModal(false)}
+                                className="px-4 py-2 rounded-md bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleExcluirParcela}
+                                className="px-4 py-2 rounded-md bg-red-600 hover:bg-red-700 text-white"
+                            >
+                                Excluir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Botão Flutuante */}
             <button
                 onClick={() => navigate("/gastos/novo")}
                 className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center transform hover:scale-110 transition-all duration-300 z-50"
                 title="Adicionar novo gasto"
             >
-                <PlusCircle size={28}/>
+                <PlusCircle size={28} />
             </button>
         </div>
     );

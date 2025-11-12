@@ -1,40 +1,44 @@
-import {BrowserRouter, Routes, Route} from "react-router-dom";
-import Login from "./pages/Login.jsx";
-import Register from "./pages/Register.jsx";
-import Dashboard from "./pages/Dashboard.jsx";
-import NovoGasto from "./pages/NovoGasto.jsx";
-import PrivateRoute from "./routes/PrivateRoute.jsx";
-import ThemeToggle from "./components/ThemeToggle.jsx";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import Dashboard from "./pages/Dashboard";
+import GastoForm from "./components/GastoForm";
+import Login from "./pages/Login";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function App() {
+
+    const token = localStorage.getItem("token");
+
     return (
-        <BrowserRouter>
-            <ThemeToggle/>
+        <Router>
             <Routes>
-                {/* Rotas públicas */}
-                <Route path="/" element={<Login/>}/>
-                <Route path="/login" element={<Login/>}/>
-                <Route path="/register" element={<Register/>}/>
+                {/* Página inicial redireciona pro dashboard se logado */}
+                <Route path="/" element={token ? <Navigate to="/dashboard" /> : <Login />} />
 
-                {/* Rotas protegidas */}
-                <Route
-                    path="/dashboard"
-                    element={
-                        <PrivateRoute>
-                            <Dashboard/>
-                        </PrivateRoute>
-                    }
-                />
+                {/* Dashboard principal */}
+                <Route path="/dashboard" element={token ? <Dashboard /> : <Navigate to="/login" />} />
 
+                {/* 🔹 Novo Gasto */}
                 <Route
                     path="/gastos/novo"
-                    element={
-                        <PrivateRoute>
-                            <NovoGasto/>
-                        </PrivateRoute>
-                    }
+                    element={token ? <GastoForm modo="criar" /> : <Navigate to="/login" />}
                 />
+
+                {/* 🔹 Editar Gasto */}
+                <Route
+                    path="/gastos/editar/:id"
+                    element={token ? <GastoForm modo="editar" /> : <Navigate to="/login" />}
+                />
+
+                {/* Login */}
+                <Route path="/login" element={<Login />} />
+
+                {/* Redireciona qualquer rota inválida */}
+                <Route path="*" element={<Navigate to="/" />} />
             </Routes>
-        </BrowserRouter>
+
+            {/* Componente global de mensagens */}
+            <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
+        </Router>
     );
 }
