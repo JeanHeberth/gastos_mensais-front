@@ -4,6 +4,5 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
     plugins: [react()],
-    historyApiFallback: true,
-    base: 'gastos-mensais-front',
+    base: '/gastos-mensais-front',
 })
