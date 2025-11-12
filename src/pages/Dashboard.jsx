@@ -31,7 +31,6 @@ export default function Dashboard() {
     const [mostrarParcelas, setMostrarParcelas] = useState(false);
     const navigate = useNavigate();
 
-    // --- API CALLS ---
     const fetchResumo = async () => {
         try {
             const response = await api.get(`/gastos/resumo?mes=${mes}&ano=${ano}`);
@@ -51,6 +50,46 @@ export default function Dashboard() {
         }
     };
 
+    // Editar uma parcela
+    const handleEditar = (parcela) => {
+        const novaDescricao = prompt("Digite a nova descrição:", parcela.descricao);
+        const novaCategoria = prompt("Digite a nova categoria:", parcela.categoria);
+
+        if (novaDescricao !== null && novaCategoria !== null) {
+            api
+                .put(`/parcelas/${parcela.id}`, {
+                    ...parcela,
+                    descricao: novaDescricao,
+                    categoria: novaCategoria,
+                })
+                .then(() => {
+                    alert("Parcela atualizada com sucesso!");
+                    fetchParcelas();
+                })
+                .catch((err) => {
+                    console.error("Erro ao atualizar parcela:", err);
+                    alert("Erro ao atualizar a parcela.");
+                });
+        }
+    };
+
+// Apagar uma parcela
+    const handleApagar = (parcela) => {
+        if (window.confirm(`Tem certeza que deseja apagar a parcela nº ${parcela.numero}?`)) {
+            api
+                .delete(`/parcelas/${parcela.id}`)
+                .then(() => {
+                    alert("Parcela removida com sucesso!");
+                    fetchParcelas();
+                })
+                .catch((err) => {
+                    console.error("Erro ao apagar parcela:", err);
+                    alert("Erro ao apagar a parcela.");
+                });
+        }
+    };
+
+
     useEffect(() => {
         fetchResumo();
     }, [mes, ano]);
@@ -59,25 +98,15 @@ export default function Dashboard() {
         if (mostrarParcelas) fetchParcelas();
     }, [mostrarParcelas, mes, ano]);
 
-    // --- LOGOUT ---
     const handleLogout = () => {
         localStorage.removeItem("token");
         navigate("/login");
     };
 
-    // --- LÓGICA DE ALTERAR ANO ---
+    // 🔄 Ao trocar o ano, volta para janeiro
     const handleAnoChange = (novoAno) => {
-        const novoAnoNum = Number(novoAno);
-        let novoMes = mes + 1;
-        let anoFinal = novoAnoNum;
-
-        if (novoMes > 12) {
-            novoMes = 1;
-            anoFinal += 1;
-        }
-
-        setAno(anoFinal);
-        setMes(novoMes);
+        setAno(Number(novoAno));
+        setMes(1);
     };
 
     if (!resumo)
@@ -160,15 +189,12 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* === 🔁 Alterna entre gráficos e tabela === */}
+            {/* === Alterna entre gráficos e tabela === */}
             {!mostrarParcelas ? (
                 <>
                     {/* Gráfico de Pizza */}
-                    <div
-                        className="rounded-lg p-6 shadow-lg mb-8 bg-white dark:bg-gray-800 transition-colors duration-500">
-                        <h2 className="text-lg font-semibold mb-4 text-center">
-                            Distribuição por Categoria 📊
-                        </h2>
+                    <div className="rounded-lg p-6 shadow-lg mb-8 bg-white dark:bg-gray-800">
+                        <h2 className="text-lg font-semibold mb-4 text-center">Distribuição por Categoria 📊</h2>
                         <ResponsiveContainer width="100%" height={300}>
                             <PieChart>
                                 <Pie
@@ -192,7 +218,7 @@ export default function Dashboard() {
                     </div>
 
                     {/* Gráfico de Barras */}
-                    <div className="rounded-lg p-6 shadow-lg bg-white dark:bg-gray-800 transition-colors duration-500">
+                    <div className="rounded-lg p-6 shadow-lg bg-white dark:bg-gray-800">
                         <h2 className="text-lg font-semibold mb-4 text-center">
                             Comparativo de Gastos por Categoria 💰
                         </h2>
@@ -213,9 +239,8 @@ export default function Dashboard() {
                     </div>
                 </>
             ) : (
-                /* ✅ Tabela estilizada de Parcelas */
-                <div
-                    className="rounded-xl p-6 shadow-lg mb-8 bg-white dark:bg-gray-800 transition-colors duration-500 overflow-x-auto">
+                /* ✅ Tabela atualizada */
+                <div className="rounded-xl p-6 shadow-lg mb-8 bg-white dark:bg-gray-800 overflow-x-auto">
                     <h2 className="text-lg font-semibold mb-4 text-center flex items-center justify-center gap-2">
                         <Calendar size={20} className="text-indigo-600 dark:text-indigo-400"/>
                         Parcelas do mês
@@ -230,31 +255,49 @@ export default function Dashboard() {
                             <table className="min-w-full text-sm border-separate border-spacing-y-1">
                                 <thead>
                                 <tr className="bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                                    <th className="px-4 py-2 text-left rounded-l-lg">#</th>
+                                    <th className="px-4 py-2 text-left rounded-l-lg">Parcela</th>
                                     <th className="px-4 py-2 text-left">Descrição</th>
                                     <th className="px-4 py-2 text-left">Categoria</th>
                                     <th className="px-4 py-2 text-right">Valor (R$)</th>
-                                    <th className="px-4 py-2 text-center rounded-r-lg">Vencimento</th>
+                                    <th className="px-4 py-2 text-center">Vencimento</th>
+                                    <th className="px-4 py-2 text-center rounded-r-lg">Opções</th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {parcelas.map((p, i) => (
+                                {parcelas.map((parcela, i) => (
                                     <tr
                                         key={i}
                                         className="bg-gray-50 dark:bg-gray-900/50 hover:bg-indigo-50 dark:hover:bg-gray-700 transition-colors"
                                     >
-                                        <td className="px-4 py-2">{p.numero}</td>
-                                        <td className="px-4 py-2">{p.descricao || "-"}</td>
-                                        <td className="px-4 py-2">{p.categoria || "-"}</td>
+                                        <td className="px-4 py-2">{parcela.numero}</td>
+                                        <td className="px-4 py-2">{parcela.descricao || "—"}</td>
+                                        <td className="px-4 py-2">{parcela.categoria || "—"}</td>
                                         <td className="px-4 py-2 text-right font-semibold text-indigo-600 dark:text-indigo-400">
-                                            {Number(p.valor).toLocaleString("pt-BR", {
+                                            {Number(parcela.valor).toLocaleString("pt-BR", {
                                                 style: "currency",
                                                 currency: "BRL",
                                             })}
                                         </td>
                                         <td className="px-4 py-2 text-center">
-                                            {new Date(p.dataVencimento).toLocaleDateString("pt-BR")}
+                                            {new Date(parcela.dataVencimento).toLocaleDateString("pt-BR")}
                                         </td>
+
+                                        <td className="px-4 py-2 text-center flex justify-center gap-2">
+                                            <button
+                                                onClick={() => handleEditar(parcela)}
+                                                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm font-medium transition-all"
+                                            >
+                                                Editar
+                                            </button>
+                                            <button
+                                                onClick={() => handleApagar(parcela)}
+                                                className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm font-medium transition-all"
+                                            >
+                                                Apagar
+                                            </button>
+                                        </td>
+
+
                                     </tr>
                                 ))}
                                 </tbody>
