@@ -212,12 +212,26 @@ export default function GastoForm({modo = "criar"}) {
                     />
                 </div>
 
-                <button
-                    type="submit"
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-all duration-300 font-semibold"
-                >
-                    {modo === "editar" ? "Salvar Alterações" : "Cadastrar Gasto"}
-                </button>
+                <div className="flex flex-col gap-3 mt-4">
+                    {/* Botão Salvar / Cadastrar */}
+                    <button
+                        type="submit"
+                        className="w-full py-3 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-all duration-300"
+                    >
+                        {modo === "editar" ? "Salvar Alterações" : "Cadastrar Gasto"}
+                    </button>
+
+                    {/* Botão Cancelar */}
+                    <button
+                        onClick={() => navigate("/dashboard")}
+                        className="w-full py-3 rounded-lg font-semibold text-gray-900 dark:text-gray-100
+                   bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600
+                   transition-all duration-300"
+                    >
+                        Cancelar
+                    </button>
+                </div>
+
             </form>
         </div>
     );

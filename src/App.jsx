@@ -4,6 +4,7 @@ import GastoForm from "./components/GastoForm";
 import Login from "./pages/Login";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Register from "./pages/Register.jsx";
 
 export default function App() {
 
@@ -29,6 +30,8 @@ export default function App() {
                     path="/gastos/editar/:id"
                     element={token ? <GastoForm modo="editar" /> : <Navigate to="/login" />}
                 />
+
+                <Route path="/register" element={<Register />} />
 
                 {/* Login */}
                 <Route path="/login" element={<Login />} />
