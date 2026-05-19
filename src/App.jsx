@@ -5,6 +5,7 @@ import Login from "./pages/Login";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Register from "./pages/Register.jsx";
+import ThemeToggle from "./components/ThemeToggle.jsx";
 
 export default function App() {
 
@@ -12,6 +13,7 @@ export default function App() {
 
     return (
         <Router>
+            <ThemeToggle />
             <Routes>
                 {/* Página inicial redireciona pro dashboard se logado */}
                 <Route path="/" element={token ? <Navigate to="/dashboard" /> : <Login />} />
