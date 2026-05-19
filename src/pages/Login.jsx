@@ -3,7 +3,7 @@ import {useNavigate} from "react-router-dom";
 import api from "../services/api";
 import toast, {Toaster} from "react-hot-toast";
 
-export default function Login() {
+export default function Login({ onLoginSuccess }) {
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [senha, setSenha] = useState("");
@@ -23,6 +23,7 @@ export default function Login() {
 
             // ✅ Armazena o token JWT no localStorage
             localStorage.setItem("token", response.data.token);
+            onLoginSuccess?.(response.data.token);
 
             toast.success("Login realizado com sucesso!");
             setTimeout(() => navigate("/dashboard"), 1000);
