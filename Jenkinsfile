@@ -18,9 +18,12 @@ pipeline {
                     if (isUnix()) {
 
                         sh '''
-                            npm install
-                            npm run build
-                        '''
+                                /opt/homebrew/bin/node -v
+                                /opt/homebrew/bin/npm -v
+
+                                /opt/homebrew/bin/npm install
+                                /opt/homebrew/bin/npm run build
+                            '''
 
                     } else {
 
