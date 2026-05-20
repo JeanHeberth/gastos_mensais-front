@@ -10,10 +10,19 @@ pipeline {
 
         stage('Build Frontend') {
             steps {
-                bat '''
-                    npm install
-                    npm run build
-                '''
+                script {
+                    if (isUnix()) {
+                        sh '''
+                            npm install
+                            npm run build
+                        '''
+                    } else {
+                        bat '''
+                            call npm install
+                            call npm run build
+                        '''
+                    }
+                }
             }
         }
 
