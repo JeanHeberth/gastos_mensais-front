@@ -13,12 +13,16 @@ pipeline {
             steps {
                 script {
                     if (isUnix()) {
-                        sh '''
-                            /opt/homebrew/bin/node -v
-                            /opt/homebrew/bin/npm -v
+                        sh '''#!/bin/bash -l
+                            export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
-                            /opt/homebrew/bin/npm install
-                            /opt/homebrew/bin/npm run build
+                            echo ">>> Node version:"
+                            node -v
+                            echo ">>> NPM version:"
+                            npm -v
+
+                            npm install
+                            npm run build
                         '''
                     } else {
                         bat '''
@@ -44,10 +48,6 @@ pipeline {
                             TOMCAT_WEBAPPS="/opt/homebrew/opt/tomcat/libexec/webapps"
                             APP_NAME="${JOB_NAME}"
 
-                            echo "Deploy frontend iniciado (Unix)"
-                            echo "Projeto: $APP_NAME"
-                            echo "Workspace: $WORKSPACE"
-
                             if [ ! -d "$WORKSPACE/dist" ]; then
                                 echo "Pasta dist nao encontrada."
                                 exit 1
@@ -64,10 +64,6 @@ pipeline {
                         bat '''
                             set TOMCAT_WEBAPPS=C:\\apache-tomcat-11.0.11\\webapps
                             set APP_NAME=%JOB_NAME%
-
-                            echo Deploy frontend iniciado (Windows)
-                            echo Projeto: %APP_NAME%
-                            echo Workspace: %WORKSPACE%
 
                             if not exist "%WORKSPACE%\\dist" (
                                 echo Pasta dist nao encontrada.
