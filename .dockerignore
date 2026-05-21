@@ -1,0 +1,44 @@
+# Git
+.git
+.gitignore
+.github
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build
+dist
+build
+
+# Tests
+coverage
+.nyc_output
+
+# CI/CD
+.jenkins
+.circleci
+.github/workflows
+
+# Misc
+README.md
+LICENSE
+Jenkinsfile
+docker-compose.yml
+.env.example
+
+# Projeto específico
+web.xml
+

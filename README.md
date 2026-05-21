@@ -14,3 +14,53 @@ The React Compiler is not enabled on this template because of its impact on dev 
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+---
+
+## 🐳 Docker
+
+### Build da imagem
+
+```bash
+docker build -t gastos-mensais-front:latest .
+```
+
+### Rodar container
+
+```bash
+docker run -p 3000:80 gastos-mensais-front:latest
+```
+
+Acesse em: `http://localhost:3000`
+
+### Docker Compose
+
+```bash
+docker-compose up -d
+```
+
+O serviço estará disponível em `http://localhost:3000`
+
+### Parar container
+
+```bash
+docker-compose down
+```
+
+### Estrutura Docker
+
+- **Dockerfile**: Multi-stage build (Node 26 para build + Nginx para serve)
+- **nginx.conf**: Configuração do Nginx com cache, gzip e suporte a React Router
+- **.dockerignore**: Otimização do contexto Docker
+- **docker-compose.yml**: Orquestração simplificada
+
+### Recursos
+
+- ✅ Node 26-alpine (build)
+- ✅ Nginx 1.27-alpine (serve)
+- ✅ Compressão gzip automática
+- ✅ Cache de assets estáticos (1 ano)
+- ✅ React Router SPA fallback
+- ✅ Healthcheck integrado
+- ✅ Multi-stage build (imagem ~100MB)
+
